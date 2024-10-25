@@ -50,23 +50,34 @@ const Home = () => {
   }, []);
 
   /**Socket Connection */
-useEffect(() => {
-  const socketConnection = io(process.env.REACT_APP_BACKEND_URL,{
-    auth:{
-      token:localStorage.getItem('token')
-    }
-  })
-
-  socketConnection.on('onlineUser', (data)=>{
-
-    dispatch(setOnlineUser(data))
-  })
-  dispatch(setSocketConnection(socketConnection))
-  //console.log("SocketConnction",socketConnection)
-  return ()=>{  
-    socketConnection.disconnect()
-  }
-}, [])
+  useEffect(() => {
+    const socketConnection = io(process.env.REACT_APP_BACKEND_URL, {
+      auth: {
+        token: localStorage.getItem('token')
+      },
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      extraHeaders: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+  
+    socketConnection.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      // Handle connection errors appropriately
+      toast.error('Connection error. Please try again.');
+    });
+  
+    socketConnection.on('onlineUser', (data) => {
+      dispatch(setOnlineUser(data));
+    });
+  
+    dispatch(setSocketConnection(socketConnection));
+  
+    return () => {
+      socketConnection.disconnect();
+    };
+  }, []);
 
   
   // //console.log(location)
